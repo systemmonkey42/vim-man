@@ -18,43 +18,45 @@ function! man#get_page(split_type, ...)
     call s:handle_nroff_file_or_error(a:split_type)
     return
   elseif a:0 == 1
-    let sect = ''
-    let page = a:1
+    let l:sect = ''
+    let l:page = a:1
   elseif a:0 >= 2
-    let sect = a:1
-    let page = a:2
+    let l:sect = a:1
+    let l:page = a:2
   endif
 
-  if sect !=# '' && !s:manpage_exists(sect, page)
-    let sect = ''
+  if l:sect !=# '' && !s:manpage_exists(l:sect, l:page)
+    let l:sect = ''
   endif
-  if !s:manpage_exists(sect, page)
-    call man#helpers#error("No manual entry for '".page."'.")
+  if !s:manpage_exists(l:sect, l:page)
+    call man#helpers#error("No manual entry for '".l:page."'.")
     return
   endif
 
   " Remember current windows and number of windows
-  let prevwin=winnr()
-  let maxwin=winnr('$')
+  let l:prevwin=winnr()
+  let l:maxwin=winnr('$')
 
   call s:update_man_tag_variables()
   call s:get_new_or_existing_man_window(a:split_type)
-  call man#helpers#set_manpage_buffer_name(page, sect)
-  call man#helpers#load_manpage_text(page, sect)
+  call man#helpers#set_manpage_buffer_name(l:page, l:sect)
+  call man#helpers#load_manpage_text(l:page, l:sect)
 
   " Try to return to the original window, taking into account
   " if the total number of windows increased, and the previous window
   " is below the newly inserted window
   if a:split_type == 'horizontal'
-    if maxwin < winnr('$')
-      if prevwin < winnr()
-        execute prevwin . 'wincmd w'
+    if l:maxwin < winnr('$')
+      if l:prevwin < winnr()
+        execute l:prevwin . 'wincmd w'
       else
-        execute prevwin+1 . 'wincmd w'
+        execute l:prevwin+1 . 'wincmd w'
       endif
     else
-      execute prevwin . 'wincmd w'
+      execute l:prevwin . 'wincmd w'
     endif
+  else
+    execute l:prevwin . 'wincmd w'
   endif
 endfunction
 
@@ -62,9 +64,9 @@ function! s:manpage_exists(sect, page)
   if a:page ==# ''
     return 0
   endif
-  let find_arg = man#helpers#find_arg()
-  let where = system(g:vim_man_cmd.' '.find_arg.' '.man#helpers#get_cmd_arg(a:sect, a:page))
-  if where !~# '^\s*/'
+  let l:find_arg = man#helpers#find_arg()
+  let l:where = system(g:vim_man_cmd.' '.l:find_arg.' '.man#helpers#get_cmd_arg(a:sect, a:page))
+  if l:where !~# '^\s*/'
     " result does not look like a file path
     return 0
   else
@@ -104,26 +106,26 @@ endfunction
 
 function! man#get_page_from_cword(split_type, cnt)
   if a:cnt == 0
-    let old_isk = &iskeyword
+    let l:old_isk = &iskeyword
     if &filetype ==# 'man'
       " when in a manpage try determining section from a word like this 'printf(3)'
       setlocal iskeyword+=(,),:
     endif
-    let str = expand('<cword>')
-    let &l:iskeyword = old_isk
-    let page = matchstr(str, '\(\k\|:\)\+')
-    let sect = matchstr(str, '(\zs[^)]*\ze)')
-    if sect !~# '^[0-9nlpo][a-z]*$' || sect ==# page
-      let sect = ''
+    let l:str = expand('<cword>')
+    let &l:iskeyword = l:old_isk
+    let l:page = matchstr(l:str, '\(\k\|:\)\+')
+    let l:sect = matchstr(l:str, '(\zs[^)]*\ze)')
+    if l:sect !~# '^[0-9nlpo][a-z]*$' || l:sect ==# l:page
+      let l:sect = ''
     endif
   else
-    let sect = a:cnt
-    let old_isk = &iskeyword
+    let l:sect = a:cnt
+    let l:old_isk = &iskeyword
     setlocal iskeyword+=:
-    let page = expand('<cword>')
-    let &l:iskeyword = old_isk
+    let l:page = expand('<cword>')
+    let &l:iskeyword = l:old_isk
   endif
-  call man#get_page(a:split_type, sect, page)
+  call man#get_page(a:split_type, l:sect, l:page)
 endfunction
 
 " }}}
